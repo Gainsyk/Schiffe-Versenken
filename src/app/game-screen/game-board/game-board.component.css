@@ -3,7 +3,7 @@ body {
   padding: 0;
 }
 
-.container {
+.grid {
   background: #8d5b06;
   display: flex;
   justify-content: center;
