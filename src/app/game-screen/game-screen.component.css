@@ -1,9 +1,12 @@
-.GameScreen {
-  background: #8e44ad;
+.gameScreen {
+  /*background: #8e44ad;*/
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   margin: 0 auto;
-  padding: 0;
   min-height: 100vh;
+  gap: 20px;
+  padding: 20px;
 }
+
+

@@ -3,23 +3,26 @@ body {
   padding: 0;
 }
 
-.grid {
-  background: #8d5b06;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0 auto;
-  padding: 0;
-  gap: 1rem;
-  width: 70vw;
-  height: 70vh;
-}
-
-div {
+.board-container {
   background: #080f13;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 60vw;
-  height: 60vh;
+  gap: 2rem;
+  margin: 2rem auto;
+  width: 80%;
 }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  gap: 2px;
+  width: 40vw;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  /*background: #8d5b06;*/
+}
+
+
+

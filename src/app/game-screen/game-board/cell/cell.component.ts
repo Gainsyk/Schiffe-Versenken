@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {NgClass} from '@angular/common';
+import {Cell} from '../../../models/cell.model';
 
 @Component({
   selector: 'app-cell',
@@ -11,9 +12,10 @@ import {NgClass} from '@angular/common';
   styleUrl: './cell.component.css'
 })
 export class CellComponent {
-cellState: 'ship' | 'fog' | 'water' | 'hit' | 'sunk' = 'fog';
+  @Input() cell!: Cell;
+
 
   onCellClick() {
-
+    this.cell.cellState = 'water';
   }
 }

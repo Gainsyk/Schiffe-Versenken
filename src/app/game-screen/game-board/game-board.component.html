@@ -1,5 +1,5 @@
-<div class="grid">
-  <div class=>
-    <app-cell></app-cell>
+<div class="board-container">
+  <div class="grid">
+    <app-cell *ngFor="let cell of cells" [cell]="cell"></app-cell>
   </div>
 </div>

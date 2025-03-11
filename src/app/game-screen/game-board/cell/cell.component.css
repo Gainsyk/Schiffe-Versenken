@@ -6,3 +6,35 @@
   align-items: center;
   justify-content: center;
 }
+
+.cell.ship {
+  background-image: url('/public/ship.jpeg');
+}
+
+.cell.fog {
+  background-image: url('/public/fog.webp');
+  background-size: contain;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.cell.water {
+  background-image: url('/public/water.webp');
+  background-size: contain;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.cell.hit {
+  background-image: url('/public/hit.PNG');
+  background-size: contain;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.cell.sunk {
+  background-image: url('/public/sunk.jpeg');
+  background-size: contain;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
