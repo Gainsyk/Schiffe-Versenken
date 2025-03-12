@@ -15,7 +15,7 @@ export class CellComponent {
   @Input() cell!: Cell;
 
 
-  onCellClick() {
-    this.cell.cellState = 'water';
+  onCellClick(cellIndex: number): void {
+
   }
 }
