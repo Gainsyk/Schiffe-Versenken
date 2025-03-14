@@ -1,9 +1,9 @@
 import {Component} from '@angular/core';
 import {CellComponent} from './cell/cell.component';
 import {NgForOf} from '@angular/common';
-import {Cell} from '../../models/cell.model';
+import {Cell, CellState} from '../../models/cell.model';
+import {Coordinate} from '../../models/coordinate.model';
 import {Orientation} from '../../models/vessel.model';
-
 
 @Component({
   selector: 'app-game-board',
@@ -12,27 +12,37 @@ import {Orientation} from '../../models/vessel.model';
   styleUrl: './game-board.component.css'
 })
 export class GameBoardComponent {
-  cells: Cell[] = Array.from({length: 100}, () => ({cellState: 'water'}));
-  boardSize: number = 10;
+  readonly startingState: CellState = 'fog';
+  readonly boardSize: number = 10;
+  cells: Cell[][] = [];
   vesselClasses: number[] = [5, 4, 4, 3, 3, 3, 2, 2];
-  currentVesselSections: number[] = [];
+  currentVesselSections: Coordinate[] = [];
   currentVesselIndex: number = 0;
   orientation: Orientation = undefined;
 
-  onCellClick(cellIndex: number): void {
+  ngOnInit(): void {
+    for (let row = 0; row < this.boardSize; row++) {
+      this.cells[row] = [];
+      for (let col = 0; col < this.boardSize; col++) {
+        this.cells[row][col] = {cellState: this.startingState};
+      }
+    }
+  }
+
+  onCellClick(coordinate: Coordinate): void {
     // falls alle Schiffe platziert, abbruch
     if (this.areAllVesselsSet()) return;
 
     //Erstes Segment
     if (this.hasNoSegmentsYet()) {
-      this.currentVesselSections.push(cellIndex);
+      this.currentVesselSections.push(coordinate);
       return;
     }
 
     //Jedes weitere Segment
     if (this.hasSegmentAlready()) {
-      if (this.isAdjacent(cellIndex)) {
-        this.currentVesselSections.push(cellIndex);
+      if (this.isAdjacent(coordinate)) {
+        this.currentVesselSections.push(coordinate);
       } else {
         alert('Schiffssegmente können nur anliegend in der Horizontalen oder Vertikalen angeordnet werden');
         return;
@@ -40,87 +50,78 @@ export class GameBoardComponent {
     }
 
     this.resetVesselTracker();
+
   }
 
-  private resetVesselTracker() {
-    if (this.currentVesselSections.length === this.vesselClasses[this.currentVesselIndex]) {
-      this.currentVesselSections = [];
-      this.currentVesselIndex++;
-      this.orientation = undefined;
-    }
-  }
-
-  getRowCol(index: number): { row: number, col: number } {
-    return {
-      row: Math.floor(index / this.boardSize),
-      col: index % this.boardSize
-    };
-  }
-
-  isAdjacent(newIndex: number): boolean {
-    const lastIndex: number = this.currentVesselSections[this.currentVesselSections.length - 1];
-    const firstIndex: number = this.currentVesselSections[0];
-
-    const {row: firstRow, col: firstCol} = this.getRowCol(firstIndex);
-    const {row: lastRow, col: lastCol} = this.getRowCol(lastIndex);
-    const {row: newRow, col: newCol} = this.getRowCol(newIndex);
+  isAdjacent(newCoordinate: Coordinate): boolean {
+    const lastCoordinate: Coordinate = this.currentVesselSections[this.currentVesselSections.length - 1];
+    const firstCoordinate: Coordinate = this.currentVesselSections[0];
 
     //Orientierung setzen beim zweiten Segment
     if (this.isOnlyOneSegmentSet()) {
-      if (this.isSameCol(firstRow, newRow, firstCol, newCol) || this.isSameRow(firstCol, newCol, firstRow, newRow)) {
-        this.orientation = (firstRow === newRow) ? 'horizontal' : 'vertical';
+      if (this.isSameRow(firstCoordinate, newCoordinate) || this.isSameCol(firstCoordinate, newCoordinate)) {
+        this.orientation = (firstCoordinate.row === newCoordinate.row) ? 'horizontal' : 'vertical';
       }
     }
 
     //Zelle auf Anschluss prüfen
-    if (this.isValidHorizontalExtension(newRow, lastRow, newCol, lastCol, firstCol)) {
+    if (this.isValidHorizontalExtension(firstCoordinate, lastCoordinate, newCoordinate)) {
       return true;
     }
-    if (this.isValidVerticalExtension(newCol, lastCol, newRow, lastRow, firstRow)) {
+    if (this.isValidVerticalExtension(firstCoordinate, lastCoordinate, newCoordinate)) {
       return true;
     }
     return false;
+
   }
 
-  private hasSegmentAlready() {
-    return this.currentVesselSections.length > 0;
+  private isSameRow(firstCoordinate: Coordinate, newCoordinate: Coordinate) {
+    return Math.abs(firstCoordinate.col - newCoordinate.col) === 1 && firstCoordinate.row === newCoordinate.row;
   }
 
-  private hasNoSegmentsYet() {
-    return this.currentVesselSections.length === 0;
+  private isSameCol(firstCoordinate: Coordinate, newCoordinate: Coordinate) {
+    return Math.abs(firstCoordinate.row - newCoordinate.row) === 1 && firstCoordinate.col === newCoordinate.col;
   }
 
-  private areAllVesselsSet() {
-    return this.currentVesselIndex === this.vesselClasses.length;
+  private isValidVerticalExtension(firstCoordinate: Coordinate, lastCoordinate: Coordinate, newCoordinate: Coordinate) {
+    return this.orientation === 'vertical' && newCoordinate.col === lastCoordinate.col &&
+      (Math.abs(newCoordinate.row - lastCoordinate.row) === 1 || Math.abs(newCoordinate.row - firstCoordinate.row) === 1);
+  }
+
+  private isValidHorizontalExtension(firstCoordinate: Coordinate, lastCoordinate: Coordinate, newCoordinate: Coordinate) {
+    return this.orientation === 'horizontal' && newCoordinate.row === lastCoordinate.row &&
+      (Math.abs(newCoordinate.col - newCoordinate.col) === 1 || Math.abs(newCoordinate.col - firstCoordinate.col) === 1);
   }
 
   private isOnlyOneSegmentSet() {
     return this.currentVesselSections.length === 1;
   }
 
-  private isSameRow(firstCol: number, newCol: number, firstRow: number, newRow: number) {
-    return Math.abs(firstCol - newCol) === 1 && firstRow === newRow;
-  }
-
-  private isSameCol(firstRow: number, newRow: number, firstCol: number, newCol: number) {
-    return Math.abs(firstRow - newRow) === 1 && firstCol === newCol;
-  }
-
-  private isValidVerticalExtension(newCol: number, lastCol: number, newRow: number, lastRow: number, firstRow: number) {
-    return this.orientation === 'vertical' && newCol === lastCol &&
-      (Math.abs(newRow - lastRow) === 1 || Math.abs(newRow - firstRow) === 1);
-  }
-
-  private isValidHorizontalExtension(newRow: number, lastRow: number, newCol: number, lastCol: number, firstCol: number) {
-    return this.orientation === 'horizontal' && newRow === lastRow &&
-      (Math.abs(newCol - lastCol) === 1 || Math.abs(newCol - firstCol) === 1);
-  }
-
   resetGame(): void {
     this.currentVesselSections = [];
-    this.orientation = undefined;
-    for (let cell of this.cells) {
-      cell.cellState = 'water';
+    for (let row of this.cells) {
+      for (let cell of row) {
+        cell.cellState = this.startingState;
+      }
     }
+  }
+
+  private hasSegmentAlready() {
+    return this.currentVesselSections.length > 0;
+  }
+
+  private resetVesselTracker() {
+    if (this.currentVesselSections.length === this.vesselClasses[this.currentVesselIndex]) {
+      this.currentVesselSections = [];
+      this.currentVesselIndex++;
+    }
+  }
+
+  private areAllVesselsSet() {
+    return this.currentVesselIndex === this.vesselClasses.length;
+  }
+
+  private hasNoSegmentsYet() {
+    return this.currentVesselSections.length === 0;
   }
 }

@@ -4,7 +4,7 @@ body {
 }
 
 .board-container {
-  background: #080f13;
+  /*background: #ffffff;*/
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,15 +13,17 @@ body {
   width: 80%;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(10, 1fr);
+.row {
+  display: flex;
+  justify-content: center;
   gap: 2px;
-  width: 40vw;
-  aspect-ratio: 1;
-  margin: 0 auto;
-  /*background: #8d5b06;*/
+  margin-bottom: 2px;
+}
+
+.row {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 2px;
 }
 
 

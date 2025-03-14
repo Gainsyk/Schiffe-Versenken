@@ -14,8 +14,8 @@ import {Cell} from '../../../models/cell.model';
 export class CellComponent {
   @Input() cell!: Cell;
 
-
-  onCellClick(cellIndex: number): void {
-
+  //ARG: cellIndex: number
+  onCellClick(): void {
+    this.cell.cellState = 'water';
   }
 }

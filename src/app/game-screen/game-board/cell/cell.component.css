@@ -1,5 +1,5 @@
 .cell {
-  background-color: #c3f1a4;
+  /*background-color: #c3f1a4;*/
   width: 50px;
   height: 50px;
   display: flex;
@@ -9,6 +9,9 @@
 
 .cell.ship {
   background-image: url('/public/ship.jpeg');
+  background-size: contain;
+  background-position: center center;
+  background-repeat: no-repeat;
 }
 
 .cell.fog {
@@ -33,7 +36,7 @@
 }
 
 .cell.sunk {
-  background-image: url('/public/sunk.jpeg');
+  background-image: url('/public/sunk.png');
   background-size: contain;
   background-position: center center;
   background-repeat: no-repeat;
