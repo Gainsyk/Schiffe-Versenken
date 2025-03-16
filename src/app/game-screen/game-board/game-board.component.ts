@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, effect, signal} from '@angular/core';
 import {CellComponent} from './cell/cell.component';
 import {NgForOf} from '@angular/common';
 import {Cell, CellState} from '../../models/cell.model';
@@ -19,6 +19,7 @@ export class GameBoardComponent {
   currentVesselSections: Coordinate[] = [];
   currentVesselIndex: number = 0;
   orientation: Orientation = undefined;
+  cellClickedSig = signal<Coordinate | null>(null);
 
   ngOnInit(): void {
     for (let row = 0; row < this.boardSize; row++) {
@@ -27,9 +28,17 @@ export class GameBoardComponent {
         this.cells[row][col] = {cellState: this.startingState};
       }
     }
+
+    effect(() => {
+      const coordinate = this.cellClickedSig();
+      if(coordinate){
+        this.placeVessels(coordinate);
+        this.cellClickedSig.set(null);
+      }
+    });
   }
 
-  onCellClick(coordinate: Coordinate): void {
+  placeVessels(coordinate: Coordinate): void {
     // falls alle Schiffe platziert, abbruch
     if (this.areAllVesselsSet()) return;
 
@@ -85,12 +94,12 @@ export class GameBoardComponent {
 
   private isValidVerticalExtension(firstCoordinate: Coordinate, lastCoordinate: Coordinate, newCoordinate: Coordinate) {
     return this.orientation === 'vertical' && newCoordinate.col === lastCoordinate.col &&
-      (Math.abs(newCoordinate.row - lastCoordinate.row) === 1 || Math.abs(newCoordinate.row - firstCoordinate.row) === 1);
+      (Math.abs(newCoordinate.row - firstCoordinate.row) === 1 || Math.abs(newCoordinate.row - lastCoordinate.row) === 1);
   }
 
   private isValidHorizontalExtension(firstCoordinate: Coordinate, lastCoordinate: Coordinate, newCoordinate: Coordinate) {
     return this.orientation === 'horizontal' && newCoordinate.row === lastCoordinate.row &&
-      (Math.abs(newCoordinate.col - newCoordinate.col) === 1 || Math.abs(newCoordinate.col - firstCoordinate.col) === 1);
+      (Math.abs(newCoordinate.col - firstCoordinate.col) === 1 || Math.abs(newCoordinate.col - lastCoordinate.col) === 1);
   }
 
   private isOnlyOneSegmentSet() {

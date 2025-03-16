@@ -1,6 +1,7 @@
-import {Component, Input} from '@angular/core';
+import {Component, Input, Output} from '@angular/core';
 import {NgClass} from '@angular/common';
 import {Cell} from '../../../models/cell.model';
+import {Coordinate} from '../../../models/coordinate.model';
 
 @Component({
   selector: 'app-cell',
@@ -13,9 +14,10 @@ import {Cell} from '../../../models/cell.model';
 })
 export class CellComponent {
   @Input() cell!: Cell;
+  @Input() coordinate!: Coordinate;
+  @Input() signalSet!: (coordinate: Coordinate) => void; // an das Signal-Objekt cellClickedSig gebundene funktion signal.set() aus board
 
-  //ARG: cellIndex: number
   onCellClick(): void {
-    this.cell.cellState = 'water';
+    this.signalSet(this.coordinate); // setzt das Signal aus Board auf zur Zelle gehörende Koordinate
   }
 }

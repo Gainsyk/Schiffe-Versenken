@@ -2,7 +2,12 @@
   <div class="grid">
     <ng-container *ngFor="let row of cells, let rowIndex = index">
       <div class="row">
-        <app-cell *ngFor="let cell of row let colIndex = index" [cell]="cell"></app-cell>
+        <app-cell *ngFor="let cell of row let colIndex = index"
+                  [cell]="cell"
+                  [coordinate]="{row: rowIndex, col: colIndex}"
+                  [signalSet]="cellClickedSig.set.bind(cellClickedSig)"
+        ></app-cell>
+
       </div>
     </ng-container>
   </div>
