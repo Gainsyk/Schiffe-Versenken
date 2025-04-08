@@ -1,13 +1,13 @@
+<app-stats-screen/>
 <div class="board-container">
   <div class="grid">
-    <ng-container *ngFor="let row of cells, let rowIndex = index">
+    <ng-container *ngFor="let row of cells; let rowIndex = index">
       <div class="row">
-        <app-cell *ngFor="let cell of row let colIndex = index"
+        <app-cell *ngFor="let cell of row; let colIndex = index"
                   [cell]="cell"
                   [coordinate]="{row: rowIndex, col: colIndex}"
                   [signalSet]="cellClickedSig.set.bind(cellClickedSig)"
         ></app-cell>
-
       </div>
     </ng-container>
   </div>

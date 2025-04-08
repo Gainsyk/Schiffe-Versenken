@@ -4,15 +4,16 @@ import {NgForOf} from '@angular/common';
 import {Cell, CellState} from '../../models/cell.model';
 import {Coordinate} from '../../models/coordinate.model';
 import {Orientation} from '../../models/vessel.model';
+import {StatsScreenComponent} from '../stats-screen/stats-screen.component';
 
 @Component({
   selector: 'app-game-board',
-  imports: [CellComponent, NgForOf],
+  imports: [CellComponent, NgForOf, StatsScreenComponent],
   templateUrl: './game-board.component.html',
   styleUrl: './game-board.component.css'
 })
 export class GameBoardComponent {
-  readonly startingState: CellState = 'fog';
+  readonly startingState: CellState = 'water';
   readonly boardSize: number = 10;
   cells: Cell[][] = [];
   vesselClasses: number[] = [5, 4, 4, 3, 3, 3, 2, 2];
@@ -21,6 +22,14 @@ export class GameBoardComponent {
   orientation: Orientation = undefined;
   cellClickedSig = signal<Coordinate | null>(null);
 
+  private readonly _effect = effect(() => {
+    const coordinate = this.cellClickedSig();
+    if (coordinate) {
+      this.placeVessels(coordinate);
+      this.cellClickedSig.set(null);
+    }
+  });
+
   ngOnInit(): void {
     for (let row = 0; row < this.boardSize; row++) {
       this.cells[row] = [];
@@ -28,23 +37,19 @@ export class GameBoardComponent {
         this.cells[row][col] = {cellState: this.startingState};
       }
     }
-
-    effect(() => {
-      const coordinate = this.cellClickedSig();
-      if(coordinate){
-        this.placeVessels(coordinate);
-        this.cellClickedSig.set(null);
-      }
-    });
   }
 
   placeVessels(coordinate: Coordinate): void {
     // falls alle Schiffe platziert, abbruch
-    if (this.areAllVesselsSet()) return;
+    if (this.areAllVesselsSet()) {
+      alert('All available assets are deployed');
+      return;
+    }
 
     //Erstes Segment
     if (this.hasNoSegmentsYet()) {
       this.currentVesselSections.push(coordinate);
+      this.loadShipClass(coordinate);
       return;
     }
 
@@ -52,14 +57,19 @@ export class GameBoardComponent {
     if (this.hasSegmentAlready()) {
       if (this.isAdjacent(coordinate)) {
         this.currentVesselSections.push(coordinate);
+        this.loadShipClass(coordinate);
       } else {
-        alert('Schiffssegmente können nur anliegend in der Horizontalen oder Vertikalen angeordnet werden');
+        alert('Ship segments may only be placed adjacent to each other horizontally or vertically');
         return;
       }
     }
 
     this.resetVesselTracker();
 
+  }
+
+  private loadShipClass(coordinate: Coordinate) {
+    this.cells[coordinate.row][coordinate.col].cellState = 'ship';
   }
 
   isAdjacent(newCoordinate: Coordinate): boolean {

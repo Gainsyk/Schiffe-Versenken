@@ -13,17 +13,16 @@ body {
   width: 80%;
 }
 
-.row {
+.grid {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   gap: 2px;
-  margin-bottom: 2px;
 }
 
 .row {
   display: flex;
   gap: 2px;
-  margin-bottom: 2px;
 }
 
 
