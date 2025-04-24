@@ -13,7 +13,7 @@ import {StatsScreenComponent} from '../stats-screen/stats-screen.component';
   styleUrl: './game-board.component.css'
 })
 export class GameBoardComponent {
-  @Input() mirrorStats: boolean = false;
+  @Input() shouldMirrorStats = false;
   readonly startingState: CellState = 'water';
   readonly boardSize: number = 10;
   cells: Cell[][] = [];
@@ -21,6 +21,7 @@ export class GameBoardComponent {
   currentVesselSections: Coordinate[] = [];
   currentVesselIndex: number = 0;
   orientation: Orientation = undefined;
+
 
   cellClickedSig = signal<Coordinate | null>(null);
   private readonly _effect = effect(() => {

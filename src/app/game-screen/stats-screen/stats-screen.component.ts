@@ -11,7 +11,7 @@ import {NgForOf} from '@angular/common';
 })
 export class StatsScreenComponent {
   @Input() vesselClasses: number[] = [];
-  @Input() statsMirrored = false;
+  @Input() mirrored: boolean = false;
 
   get allVessels(): number[] {
     return this.vesselClasses;
@@ -27,6 +27,6 @@ export class StatsScreenComponent {
 
   @HostBinding('class.mirrored')
   get isMirrored(): boolean {
-    return this.statsMirrored;
+    return this.mirrored;
   }
 }
