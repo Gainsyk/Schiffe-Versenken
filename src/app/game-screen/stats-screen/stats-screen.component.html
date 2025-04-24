@@ -1,1 +1,16 @@
-<p>stats-screen works!</p>
+<div class="stats">
+
+  <div class="metrics">
+    <div class="metric"><span class="label">Time: </span> <span class="value">00:12:34</span></div>
+    <div class="metric"><span class="label">Shots Fired: </span> <span class="value">123</span></div>
+    <div class="metric"><span class="label">Accuracy: </span> <span class="value">62%</span></div>
+    <div class="metric"><span class="label">Ships Remaining: </span> <span class="value">3</span></div>
+    <div class="metric"><span class="label">Intact Ship Sections: </span> <span class="value">8</span></div>
+  </div>
+
+  <div class="vessels-overview">
+    <div class="vessel" *ngFor="let amountSections of allVessels; let i = index;">
+      <div class="sections" *ngFor="let _ of range(amountSections);"></div>
+    </div>
+  </div>
+</div>

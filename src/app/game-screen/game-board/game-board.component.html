@@ -1,4 +1,5 @@
-<app-stats-screen/>
+<app-stats-screen [vesselClasses]="vesselClasses"/>
+
 <div class="board-container">
   <div class="grid">
     <ng-container *ngFor="let row of cells; let rowIndex = index">

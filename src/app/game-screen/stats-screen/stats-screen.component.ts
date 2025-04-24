@@ -1,11 +1,26 @@
-import { Component } from '@angular/core';
+import {Component, Input} from '@angular/core';
+import {NgForOf} from '@angular/common';
 
 @Component({
   selector: 'app-stats-screen',
-  imports: [],
+  imports: [
+    NgForOf
+  ],
   templateUrl: './stats-screen.component.html',
   styleUrl: './stats-screen.component.css'
 })
 export class StatsScreenComponent {
+@Input() vesselClasses: number[] = [];
 
+  get allVessels(): number[] {
+    return this.vesselClasses;
+  }
+
+  range(n: number): number[] {
+    const array: number[] = new Array(n);
+    for (let i = 0; i < n; i++) {
+      array[i] = i;
+    }
+    return array;
+  }
 }
