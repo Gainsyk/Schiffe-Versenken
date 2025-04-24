@@ -1,4 +1,4 @@
-import {Component, effect, signal} from '@angular/core';
+import {Component, effect, Input, signal} from '@angular/core';
 import {CellComponent} from './cell/cell.component';
 import {NgForOf} from '@angular/common';
 import {Cell, CellState} from '../../models/cell.model';
@@ -13,15 +13,16 @@ import {StatsScreenComponent} from '../stats-screen/stats-screen.component';
   styleUrl: './game-board.component.css'
 })
 export class GameBoardComponent {
+  @Input() mirrorStats: boolean = false;
   readonly startingState: CellState = 'water';
   readonly boardSize: number = 10;
   cells: Cell[][] = [];
-  vesselClasses: number[] = [5, 4, 4, 3, 3, 3, 2, 2];
+  vesselClasses: number[] = [5, 4, 4, 3, 3, 2, 2];
   currentVesselSections: Coordinate[] = [];
   currentVesselIndex: number = 0;
   orientation: Orientation = undefined;
-  cellClickedSig = signal<Coordinate | null>(null);
 
+  cellClickedSig = signal<Coordinate | null>(null);
   private readonly _effect = effect(() => {
     const coordinate = this.cellClickedSig();
     if (coordinate) {

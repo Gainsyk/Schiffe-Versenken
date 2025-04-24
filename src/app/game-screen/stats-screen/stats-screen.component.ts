@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, HostBinding, Input} from '@angular/core';
 import {NgForOf} from '@angular/common';
 
 @Component({
@@ -10,7 +10,8 @@ import {NgForOf} from '@angular/common';
   styleUrl: './stats-screen.component.css'
 })
 export class StatsScreenComponent {
-@Input() vesselClasses: number[] = [];
+  @Input() vesselClasses: number[] = [];
+  @Input() statsMirrored = false;
 
   get allVessels(): number[] {
     return this.vesselClasses;
@@ -22,5 +23,10 @@ export class StatsScreenComponent {
       array[i] = i;
     }
     return array;
+  }
+
+  @HostBinding('class.mirrored')
+  get isMirrored(): boolean {
+    return this.statsMirrored;
   }
 }
