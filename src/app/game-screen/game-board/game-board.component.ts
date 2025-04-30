@@ -16,14 +16,14 @@ import {getVesselMessage, MessageKey} from '../../i18n/messages';
 })
 
 export class GameBoardComponent implements OnInit, OnDestroy {
-  constructor(private stats: StatsService) {
+  constructor(
+    private stats: StatsService) {
   }
 
   @Input() shouldMirrorStats = false;
   vesselClasses: { class: MessageKey, amountSections: number }[] = [
     {class: 'carrier', amountSections: 5},
     {class: 'battleship', amountSections: 4},
-    {class: 'cruiser', amountSections: 3},
     {class: 'cruiser', amountSections: 3},
     {class: 'destroyer', amountSections: 2},
     {class: 'destroyer', amountSections: 2},
@@ -154,7 +154,9 @@ export class GameBoardComponent implements OnInit, OnDestroy {
     vp.placedSections = vp.coordinatesOfSections.length;
 
     if (vp.placedSections === vp.amountSections) {
-      alert(getVesselMessage(vp.class));
+      setTimeout(() => {
+        alert(getVesselMessage(vp.class));
+      }, 0);
     }
   }
 

@@ -9,8 +9,9 @@
   </div>
 
   <div class="vessels-overview">
-    <div class="vessel" *ngFor="let amountSections of allVessels; let i = index;">
-      <div class="sections" *ngFor="let _ of range(amountSections);"></div>
+    <div class="vessel" *ngFor="let vp of allVessels; let i = index;">
+      <div class="sections" *ngFor="let _ of range(vp.amountSections); let j = index"
+           [class.ship]="j < vp.placedSections"></div>
     </div>
   </div>
 </div>
