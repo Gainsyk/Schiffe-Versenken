@@ -1,10 +1,12 @@
-import {Component, effect, Input, signal} from '@angular/core';
+import {Component, effect, Input, signal, OnInit, OnDestroy} from '@angular/core';
 import {CellComponent} from './cell/cell.component';
 import {NgForOf} from '@angular/common';
 import {Cell, CellState} from '../../models/cell.model';
 import {Coordinate} from '../../models/coordinate.model';
-import {Orientation} from '../../models/vessel.model';
+import {Orientation, VesselPlacement} from '../../models/vessel.model';
 import {StatsScreenComponent} from '../stats-screen/stats-screen.component';
+import {StatsService} from '../../services/stats.service';
+import {getVesselMessage, MessageKey} from '../../i18n/messages';
 
 @Component({
   selector: 'app-game-board',
@@ -12,18 +14,38 @@ import {StatsScreenComponent} from '../stats-screen/stats-screen.component';
   templateUrl: './game-board.component.html',
   styleUrl: './game-board.component.css'
 })
-export class GameBoardComponent {
+
+export class GameBoardComponent implements OnInit, OnDestroy {
+  constructor(private stats: StatsService) {
+  }
+
   @Input() shouldMirrorStats = false;
+  vesselClasses: { class: MessageKey, amountSections: number }[] = [
+    {class: 'carrier', amountSections: 5},
+    {class: 'battleship', amountSections: 4},
+    {class: 'cruiser', amountSections: 3},
+    {class: 'cruiser', amountSections: 3},
+    {class: 'destroyer', amountSections: 2},
+    {class: 'destroyer', amountSections: 2},
+    {class: 'submarine', amountSections: 1}];
   readonly startingState: CellState = 'water';
   readonly boardSize: number = 10;
   cells: Cell[][] = [];
-  vesselClasses: number[] = [5, 4, 4, 3, 3, 2, 2];
-  currentVesselSections: Coordinate[] = [];
-  currentVesselIndex: number = 0;
+  vesselPlacements: VesselPlacement[] = [];
   orientation: Orientation = undefined;
 
+  ngOnInit(): void {
+    this.initBoard();
+    this.initVesselPlacement();
+    this.stats.startTimer();
+  }
+
+  ngOnDestroy() {
+    this.stats.stopSubscription();
+  }
 
   cellClickedSig = signal<Coordinate | null>(null);
+
   private readonly _effect = effect(() => {
     const coordinate = this.cellClickedSig();
     if (coordinate) {
@@ -32,54 +54,39 @@ export class GameBoardComponent {
     }
   });
 
-  ngOnInit(): void {
-    for (let row = 0; row < this.boardSize; row++) {
-      this.cells[row] = [];
-      for (let col = 0; col < this.boardSize; col++) {
-        this.cells[row][col] = {cellState: this.startingState};
-      }
-    }
-  }
-
   placeVessels(coordinate: Coordinate): void {
-    // falls alle Schiffe platziert, abbruch
+    // falls alle Schiffe platziert, Abbruch
     if (this.areAllVesselsSet()) {
       alert('All available assets are deployed');
       return;
     }
 
+    // aktives Schiff holen
+    const vp = this.getActiveVessel();
+
     //Erstes Segment
     if (this.hasNoSegmentsYet()) {
-      this.currentVesselSections.push(coordinate);
-      this.loadShipClass(coordinate);
+      this.addSection(vp, coordinate);
       return;
     }
 
     //Jedes weitere Segment
     if (this.hasSegmentAlready()) {
-      if (this.isAdjacent(coordinate)) {
-        this.currentVesselSections.push(coordinate);
-        this.loadShipClass(coordinate);
+      if (this.isAdjacent(vp, coordinate)) {
+        this.addSection(vp, coordinate);
       } else {
-        alert('Ship segments may only be placed adjacent to each other horizontally or vertically');
+        alert('Ship segments may only be placed vertically or horizontally adjacent to each other');
         return;
       }
     }
-
-    this.resetVesselTracker();
-
   }
 
-  private loadShipClass(coordinate: Coordinate) {
-    this.cells[coordinate.row][coordinate.col].cellState = 'ship';
-  }
-
-  isAdjacent(newCoordinate: Coordinate): boolean {
-    const lastCoordinate: Coordinate = this.currentVesselSections[this.currentVesselSections.length - 1];
-    const firstCoordinate: Coordinate = this.currentVesselSections[0];
+  isAdjacent(vp: VesselPlacement, newCoordinate: Coordinate): boolean {
+    const firstCoordinate: Coordinate = vp.coordinatesOfSections[0];
+    const lastCoordinate: Coordinate = vp.coordinatesOfSections[vp.coordinatesOfSections.length - 1];
 
     //Orientierung setzen beim zweiten Segment
-    if (this.isOnlyOneSegmentSet()) {
+    if (this.hasOnlyOneSegment()) {
       if (this.isSameRow(firstCoordinate, newCoordinate) || this.isSameCol(firstCoordinate, newCoordinate)) {
         this.orientation = (firstCoordinate.row === newCoordinate.row) ? 'horizontal' : 'vertical';
       }
@@ -94,6 +101,24 @@ export class GameBoardComponent {
     }
     return false;
 
+  }
+
+  private initVesselPlacement() {
+    this.vesselPlacements = this.vesselClasses.map(vc => ({
+      class: vc.class,
+      amountSections: vc.amountSections,
+      placedSections: 0,
+      coordinatesOfSections: []
+    }));
+  }
+
+  private initBoard() {
+    for (let row = 0; row < this.boardSize; row++) {
+      this.cells[row] = [];
+      for (let col = 0; col < this.boardSize; col++) {
+        this.cells[row][col] = {cellState: this.startingState};
+      }
+    }
   }
 
   private isSameRow(firstCoordinate: Coordinate, newCoordinate: Coordinate) {
@@ -114,35 +139,42 @@ export class GameBoardComponent {
       (Math.abs(newCoordinate.col - firstCoordinate.col) === 1 || Math.abs(newCoordinate.col - lastCoordinate.col) === 1);
   }
 
-  private isOnlyOneSegmentSet() {
-    return this.currentVesselSections.length === 1;
-  }
-
   resetGame(): void {
-    this.currentVesselSections = [];
-    for (let row of this.cells) {
-      for (let cell of row) {
-        cell.cellState = this.startingState;
-      }
+    this.stats.stopSubscription();
+    this.stats.startTimer();
+    this.orientation = undefined;
+    this.initBoard();
+    this.initVesselPlacement();
+  }
+
+  private addSection(vp: VesselPlacement, coordinate: Coordinate): void {
+    this.cells[coordinate.row][coordinate.col].cellState = 'ship';
+
+    vp.coordinatesOfSections.push(coordinate);
+    vp.placedSections = vp.coordinatesOfSections.length;
+
+    if (vp.placedSections === vp.amountSections) {
+      alert(getVesselMessage(vp.class));
     }
   }
 
-  private hasSegmentAlready() {
-    return this.currentVesselSections.length > 0;
+  private getActiveVessel(): VesselPlacement {
+    return this.vesselPlacements.find(vp => vp.placedSections < vp.amountSections)!;
   }
 
-  private resetVesselTracker() {
-    if (this.currentVesselSections.length === this.vesselClasses[this.currentVesselIndex]) {
-      this.currentVesselSections = [];
-      this.currentVesselIndex++;
-    }
+  private hasNoSegmentsYet(): boolean {
+    return this.getActiveVessel().placedSections === 0;
   }
 
-  private areAllVesselsSet() {
-    return this.currentVesselIndex === this.vesselClasses.length;
+  private hasSegmentAlready(): boolean {
+    return this.getActiveVessel().placedSections > 0;
   }
 
-  private hasNoSegmentsYet() {
-    return this.currentVesselSections.length === 0;
+  private hasOnlyOneSegment(): boolean {
+    return this.getActiveVessel().placedSections === 1;
+  }
+
+  private areAllVesselsSet(): boolean {
+    return this.vesselPlacements.every(vp => vp.placedSections === vp.amountSections);
   }
 }

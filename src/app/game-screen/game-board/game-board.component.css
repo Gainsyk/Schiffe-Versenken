@@ -1,7 +1,16 @@
 :host {
-  display: block;
-  background-color: #b7ef90;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  /*background-color: #b7ef90;*/
+}
+
+
+app-stats-screen {
+  align-self: center;
+  width: 90%;
+  max-width: none;
+}
 
 .board-container {
   /*background: #ffffff;*/
@@ -9,7 +18,7 @@
   justify-content: center;
   align-items: center;
   gap: 2rem;
-  margin: 2rem auto;
+  margin: 50px auto;
   width: 80%;
 }
 
