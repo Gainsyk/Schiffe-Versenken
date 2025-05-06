@@ -1,4 +1,4 @@
-import {Component, effect, Input, signal, OnInit, OnDestroy} from '@angular/core';
+import {Component, effect, Input, signal, OnInit, OnDestroy, WritableSignal} from '@angular/core';
 import {CellComponent} from './cell/cell.component';
 import {NgForOf} from '@angular/common';
 import {Cell, CellState} from '../../models/cell.model';
@@ -7,6 +7,7 @@ import {Orientation, VesselPlacement} from '../../models/vessel.model';
 import {StatsScreenComponent} from '../stats-screen/stats-screen.component';
 import {StatsService} from '../../services/stats.service';
 import {getVesselMessage, MessageKey} from '../../i18n/messages';
+import {GamePhase} from '../../models/game-phase.model';
 
 @Component({
   selector: 'app-game-board',
@@ -33,6 +34,8 @@ export class GameBoardComponent implements OnInit, OnDestroy {
   cells: Cell[][] = [];
   vesselPlacements: VesselPlacement[] = [];
   orientation: Orientation = undefined;
+  gamePhase: WritableSignal<GamePhase> = signal<GamePhase>('deployment');
+  fogOfWar: WritableSignal<Set<string>> = signal<Set<string>>(new Set);
 
   ngOnInit(): void {
     this.initBoard();
@@ -44,14 +47,24 @@ export class GameBoardComponent implements OnInit, OnDestroy {
     this.stats.stopSubscription();
   }
 
-  cellClickedSig = signal<Coordinate | null>(null);
+  cellClickedSig: WritableSignal<Coordinate | null> = signal<Coordinate | null>(null);
 
   private readonly _effect = effect(() => {
     const coordinate = this.cellClickedSig();
-    if (coordinate) {
+    if (!coordinate) return;
+
+    if (this.gamePhase() === 'deployment') {
       this.placeVessels(coordinate);
-      this.cellClickedSig.set(null);
+      if (this.areAllVesselsSet()) {
+        this.gamePhase.set('battle');
+        this.setFog();
+      }
+
+    } else {
+      this.fireShots(coordinate);
     }
+
+    this.cellClickedSig.set(null);
   });
 
   placeVessels(coordinate: Coordinate): void {
@@ -121,6 +134,33 @@ export class GameBoardComponent implements OnInit, OnDestroy {
     }
   }
 
+  private fireShots(coordinate: Coordinate): void {
+    this.clearFog(coordinate);
+    const cell = this.cells[coordinate.row][coordinate.col];
+
+    // bereits beschossen
+    if (cell.cellState === 'hit' || cell.cellState === 'sunk') {
+      return;
+    }
+
+    // Treffer
+    if (cell.cellState === 'ship') {
+      cell.cellState = 'hit';
+      this.stats.recordHit();
+      const vp = this.vesselPlacements.find(vp =>
+        vp.coordinatesOfSections.some(c => c.row === coordinate.row && c.col === coordinate.col))!;
+      const isAllHit = vp.coordinatesOfSections.every(c => this.cells[c.row][c.col].cellState === 'hit');
+      if(isAllHit){
+        vp.coordinatesOfSections.forEach(c => this.cells[c.row][c.col].cellState = 'sunk');
+        this.stats.recordSunk();
+      }
+
+    } else {
+      cell.cellState = 'water';
+      this.stats.recordMiss();
+    }
+  }
+
   private isSameRow(firstCoordinate: Coordinate, newCoordinate: Coordinate) {
     return Math.abs(firstCoordinate.col - newCoordinate.col) === 1 && firstCoordinate.row === newCoordinate.row;
   }
@@ -178,5 +218,21 @@ export class GameBoardComponent implements OnInit, OnDestroy {
 
   private areAllVesselsSet(): boolean {
     return this.vesselPlacements.every(vp => vp.placedSections === vp.amountSections);
+  }
+
+  private clearFog(coordinate: Coordinate): Set<string> {
+    this.fogOfWar.update(oldSet => {
+      const newSet = new Set(oldSet);
+      newSet.add(`${coordinate.row},${coordinate.col}`);
+      return newSet;
+    })
+  }
+
+  private setFog() {
+    this.cells.forEach(row =>
+    row.forEach(cell =>{
+      if(cell.cellState === 'water') cell.cellState = 'fog';
+    }))
+    this.fogOfWar.set(new Set);
   }
 }

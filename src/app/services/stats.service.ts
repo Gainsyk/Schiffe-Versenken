@@ -1,5 +1,6 @@
-import {Injectable} from '@angular/core';
+import {Injectable, Input, signal, WritableSignal} from '@angular/core';
 import {BehaviorSubject, interval, map, Subscription} from 'rxjs';
+import {SIGNAL} from '@angular/core/primitives/signals';
 
 @Injectable({
   providedIn: 'root'
@@ -8,7 +9,13 @@ import {BehaviorSubject, interval, map, Subscription} from 'rxjs';
 export class StatsService {
   private startTimeMs = 0;
   private timerSubscription?: Subscription;
-  readonly elapsed$ = new BehaviorSubject<string>('00:00');
+  readonly elapsed$: BehaviorSubject<string> = new BehaviorSubject<string>('00:00');
+  private shotsFired: WritableSignal<number> = signal(0);
+  private hits: WritableSignal<number> = signal(0);
+  private misses: WritableSignal<number> = signal(0);
+  private sunkShips: WritableSignal<number> = signal(0);
+  private remainingShips: WritableSignal<number> = signal(0);
+  @Input() deployedShips: number;
 
   startTimer() {
     this.startTimeMs = Date.now();
@@ -28,5 +35,50 @@ export class StatsService {
   stopSubscription() {
     this.timerSubscription?.unsubscribe();
     this.timerSubscription = undefined;
+  }
+
+  getDeployed() {
+    return this.deployedShips();
+  }
+
+  recordShot() {
+    this.shotsFired.update(n => n + 1);
+  }
+
+  recordHit() {
+    this.hits.update(n => n + 1);
+  }
+
+  recordMiss() {
+    this.misses.update(n => n + 1);
+  }
+
+  recordSunk() {
+    this.sunkShips.update(n => n + 1);
+  }
+
+  getShots() {
+    return this.shotsFired();
+  }
+
+  getHits() {
+    return this.hits();
+  }
+
+  getMisses() {
+    return this.misses();
+  }
+
+  getSunk() {
+    return this.sunkShips();
+  }
+
+  getRemainingShips() {
+    return this.deployedShips - this.sunkShips();
+  }
+
+  getAccuracy(): number {
+    const shotsFired = this.shotsFired();
+    return shotsFired ? Math.round(this.hits() / shotsFired * 100) : 0;
   }
 }

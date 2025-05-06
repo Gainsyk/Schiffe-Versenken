@@ -2,9 +2,10 @@
 
   <div class="metrics">
     <div class="metric"><span class="label">Time: </span> <span class="value">{{ stats.elapsed$ | async }}</span></div>
-    <div class="metric"><span class="label">Shots Fired: </span> <span class="value">123</span></div>
-    <div class="metric"><span class="label">Accuracy: </span> <span class="value">62%</span></div>
-    <div class="metric"><span class="label">Ships Remaining: </span> <span class="value">3</span></div>
+    <div class="metric"><span class="label">Shots Fired: </span> <span class="value">{{ stats.getShots() }}</span></div>
+    <div class="metric"><span class="label">Hits: </span> <span class="value">{{ stats.getHits() }}</span></div>
+    <div class="metric"><span class="label">Accuracy: </span> <span class="value">{{ stats.getAccuracy() }}%</span></div>
+    <div class="metric"><span class="label">Ships Remaining: </span> <span class="value">{{ stats.get }}</span></div>
     <div class="metric"><span class="label">Intact Ship Sections: </span> <span class="value">8</span></div>
   </div>
 

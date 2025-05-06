@@ -18,6 +18,7 @@ export class StatsScreenComponent {
 
   @Input() vesselPlacements: VesselPlacement[] = [];
   @Input() mirrored: boolean = false;
+  @Input() deployedShips!: number;
 
   @HostBinding('class.mirrored')
   get isMirrored(): boolean {
