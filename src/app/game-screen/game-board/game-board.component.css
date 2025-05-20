@@ -14,6 +14,7 @@ app-stats-screen {
 
 .board-container {
   /*background: #ffffff;*/
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -34,5 +35,52 @@ app-stats-screen {
   gap: 2px;
 }
 
+.sitRep-button {
+  display: block;
+  margin: 0 auto;
+  width: 100px;
+  height: 100px;
+  background-image: url('/public/Situation Report.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: none;
+}
 
+
+.sitRep-label {
+  display: block;
+  margin: 0 auto;
+  color: #bb9004;
+  font-size: 12pt;
+  letter-spacing: 0.05em;
+  font-family: Stencil;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.defeat {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  z-index: 100;
+  animation: scaleUp 2.5s ease-out forwards;
+}
+
+@keyframes scaleUp {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+}
 

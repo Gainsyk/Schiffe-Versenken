@@ -1,11 +1,14 @@
 <div class="gameScreen">
 
   <div class="player1">
-    <app-game-board [shouldMirrorStats]="false"/>
+    <app-game-board [shouldMirrorStats]="false" (defeat)="onPlayer1Defeat()"/>
   </div>
 
   <div class="player2">
-    <app-game-board [shouldMirrorStats]="true"/>
+    <app-game-board [shouldMirrorStats]="true" (defeat)="onPlayer2Defeat()"/>
   </div>
 
 </div>
+
+<button type="button" class="restart-button"></button>
+

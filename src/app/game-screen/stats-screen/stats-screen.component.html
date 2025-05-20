@@ -4,15 +4,23 @@
     <div class="metric"><span class="label">Time: </span> <span class="value">{{ stats.elapsed$ | async }}</span></div>
     <div class="metric"><span class="label">Shots Fired: </span> <span class="value">{{ stats.getShots() }}</span></div>
     <div class="metric"><span class="label">Hits: </span> <span class="value">{{ stats.getHits() }}</span></div>
-    <div class="metric"><span class="label">Accuracy: </span> <span class="value">{{ stats.getAccuracy() }}%</span></div>
-    <div class="metric"><span class="label">Ships Remaining: </span> <span class="value">{{ stats.get }}</span></div>
-    <div class="metric"><span class="label">Intact Ship Sections: </span> <span class="value">8</span></div>
+    <div class="metric"><span class="label">Ships Remaining: </span> <span class="value">{{ stats.getRemainingShips() }}</span></div>
+    <div class="metric"><span class="label">Intact Ship Sections: </span> <span
+      class="value">{{ stats.getIntactSections() }}</span></div>
+    <div class="metric"><span class="label">Accuracy: </span> <span class="value">{{ stats.getAccuracy() }}%</span>
+    </div>
+    <div class="metric"><span class="label">Battles won: </span> <span class="value">{{ stats.getVictories() }}</span>
+    </div>
   </div>
 
   <div class="vessels-overview">
     <div class="vessel" *ngFor="let vp of allVessels; let i = index;">
       <div class="sections" *ngFor="let _ of range(vp.amountSections); let j = index"
-           [class.ship]="j < vp.placedSections"></div>
+           [class]="{
+           'ship': j < vp.placedSections && !vp.sunk,
+           'sunk': j < vp.placedSections && vp.sunk
+           }"
+      ></div>
     </div>
   </div>
 </div>

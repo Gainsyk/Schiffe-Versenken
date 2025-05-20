@@ -5,6 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;     /* für Z-Werte*/
 }
 
 .cell.ship {
@@ -14,11 +15,14 @@
   background-repeat: no-repeat;
 }
 
-.cell.fog {
-  background-image: url('/public/fog.webp');
-  background-size: contain;
-  background-position: center center;
-  background-repeat: no-repeat;
+.cell.fog::after{
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: url('/public/fog.webp') center/contain no-repeat;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .cell.water {

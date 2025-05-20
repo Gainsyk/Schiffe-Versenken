@@ -1,21 +1,20 @@
-import {Injectable, Input, signal, WritableSignal} from '@angular/core';
-import {BehaviorSubject, interval, map, Subscription} from 'rxjs';
-import {SIGNAL} from '@angular/core/primitives/signals';
+import {Injectable, signal, WritableSignal} from '@angular/core';
+import {BehaviorSubject, interval, map, reduce, Subscription} from 'rxjs';
+import {MessageKey} from '../i18n/messages';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({providedIn: 'root'})
 
 export class StatsService {
   private startTimeMs = 0;
   private timerSubscription?: Subscription;
   readonly elapsed$: BehaviorSubject<string> = new BehaviorSubject<string>('00:00');
+  private deployedShips: WritableSignal<number> = signal(0);
   private shotsFired: WritableSignal<number> = signal(0);
   private hits: WritableSignal<number> = signal(0);
   private misses: WritableSignal<number> = signal(0);
   private sunkShips: WritableSignal<number> = signal(0);
-  private remainingShips: WritableSignal<number> = signal(0);
-  @Input() deployedShips: number;
+  private intactSections: WritableSignal<number> = signal(0);
+  private victories: WritableSignal<number> = signal(0);
 
   startTimer() {
     this.startTimeMs = Date.now();
@@ -37,8 +36,8 @@ export class StatsService {
     this.timerSubscription = undefined;
   }
 
-  getDeployed() {
-    return this.deployedShips();
+  setDeployed(n: number) {
+    return this.deployedShips.set(n);
   }
 
   recordShot() {
@@ -57,6 +56,10 @@ export class StatsService {
     this.sunkShips.update(n => n + 1);
   }
 
+  recordVictory() {
+    this.victories.update((v) => v + 1);
+  }
+
   getShots() {
     return this.shotsFired();
   }
@@ -65,20 +68,31 @@ export class StatsService {
     return this.hits();
   }
 
-  getMisses() {
-    return this.misses();
-  }
-
-  getSunk() {
-    return this.sunkShips();
-  }
-
   getRemainingShips() {
-    return this.deployedShips - this.sunkShips();
+    return this.deployedShips() - this.sunkShips();
   }
 
   getAccuracy(): number {
     const shotsFired = this.shotsFired();
     return shotsFired ? Math.round(this.hits() / shotsFired * 100) : 0;
+  }
+
+  getVictories() {
+    return this.victories();
+  }
+
+  countSections(vesselClasses: { class: MessageKey, amountSections: number }[]) {
+    const total = vesselClasses
+      .map(vc => vc.amountSections)
+      .reduce((sum, n) => sum + n, 0);
+    this.intactSections.set(total);
+  }
+
+  subtractSection() {
+    this.intactSections.update(n => n - 1);
+  }
+
+  getIntactSections() {
+    return this.intactSections();
   }
 }

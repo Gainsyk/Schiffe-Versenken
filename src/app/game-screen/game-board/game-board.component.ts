@@ -1,6 +1,6 @@
-import {Component, effect, Input, signal, OnInit, OnDestroy, WritableSignal} from '@angular/core';
+import {Component, effect, Input, signal, OnInit, OnDestroy, WritableSignal, Output, EventEmitter} from '@angular/core';
 import {CellComponent} from './cell/cell.component';
-import {NgForOf} from '@angular/common';
+import {NgForOf, NgIf} from '@angular/common';
 import {Cell, CellState} from '../../models/cell.model';
 import {Coordinate} from '../../models/coordinate.model';
 import {Orientation, VesselPlacement} from '../../models/vessel.model';
@@ -11,22 +11,25 @@ import {GamePhase} from '../../models/game-phase.model';
 
 @Component({
   selector: 'app-game-board',
-  imports: [CellComponent, NgForOf, StatsScreenComponent],
+  imports: [CellComponent, NgForOf, StatsScreenComponent, NgIf],
   templateUrl: './game-board.component.html',
-  styleUrl: './game-board.component.css'
+  styleUrl: './game-board.component.css',
+  providers: [StatsService]
 })
 
 export class GameBoardComponent implements OnInit, OnDestroy {
-  constructor(
-    private stats: StatsService) {
+  constructor(private stats: StatsService) {
+    if(this.loser()) {
+      this.stats.recordVictory();
+    }
   }
 
-  @Input() shouldMirrorStats = false;
+  @Input() shouldMirrorStats: boolean = false;
   vesselClasses: { class: MessageKey, amountSections: number }[] = [
-    {class: 'carrier', amountSections: 5},
-    {class: 'battleship', amountSections: 4},
-    {class: 'cruiser', amountSections: 3},
-    {class: 'destroyer', amountSections: 2},
+    // {class: 'carrier', amountSections: 5},
+    // {class: 'battleship', amountSections: 4},
+    // {class: 'cruiser', amountSections: 3},
+    // {class: 'destroyer', amountSections: 2},
     {class: 'destroyer', amountSections: 2},
     {class: 'submarine', amountSections: 1}];
   readonly startingState: CellState = 'water';
@@ -35,11 +38,14 @@ export class GameBoardComponent implements OnInit, OnDestroy {
   vesselPlacements: VesselPlacement[] = [];
   orientation: Orientation = undefined;
   gamePhase: WritableSignal<GamePhase> = signal<GamePhase>('deployment');
-  fogOfWar: WritableSignal<Set<string>> = signal<Set<string>>(new Set);
+  fogOfWar: WritableSignal<Set<string>> = signal<Set<string>>(new Set<string>);
+  sitRep: WritableSignal<boolean> = signal<boolean>(false);
+  loser: WritableSignal<boolean> = signal<boolean>(false);
 
   ngOnInit(): void {
     this.initBoard();
     this.initVesselPlacement();
+    this.stats.countSections(this.vesselClasses);
     this.stats.startTimer();
   }
 
@@ -57,6 +63,7 @@ export class GameBoardComponent implements OnInit, OnDestroy {
       this.placeVessels(coordinate);
       if (this.areAllVesselsSet()) {
         this.gamePhase.set('battle');
+        this.stats.setDeployed(this.vesselClasses.length);
         this.setFog();
       }
 
@@ -121,7 +128,8 @@ export class GameBoardComponent implements OnInit, OnDestroy {
       class: vc.class,
       amountSections: vc.amountSections,
       placedSections: 0,
-      coordinatesOfSections: []
+      coordinatesOfSections: [],
+      sunk: false
     }));
   }
 
@@ -135,6 +143,7 @@ export class GameBoardComponent implements OnInit, OnDestroy {
   }
 
   private fireShots(coordinate: Coordinate): void {
+    this.stats.recordShot();
     this.clearFog(coordinate);
     const cell = this.cells[coordinate.row][coordinate.col];
 
@@ -147,17 +156,23 @@ export class GameBoardComponent implements OnInit, OnDestroy {
     if (cell.cellState === 'ship') {
       cell.cellState = 'hit';
       this.stats.recordHit();
+      this.stats.subtractSection();
       const vp = this.vesselPlacements.find(vp =>
         vp.coordinatesOfSections.some(c => c.row === coordinate.row && c.col === coordinate.col))!;
       const isAllHit = vp.coordinatesOfSections.every(c => this.cells[c.row][c.col].cellState === 'hit');
-      if(isAllHit){
+      if (isAllHit) {
         vp.coordinatesOfSections.forEach(c => this.cells[c.row][c.col].cellState = 'sunk');
         this.stats.recordSunk();
+        vp.sunk = true;
       }
 
     } else {
       cell.cellState = 'water';
       this.stats.recordMiss();
+    }
+
+    if (this.stats.getIntactSections() === 0) {
+      this.loser.set(true);
     }
   }
 
@@ -220,19 +235,24 @@ export class GameBoardComponent implements OnInit, OnDestroy {
     return this.vesselPlacements.every(vp => vp.placedSections === vp.amountSections);
   }
 
-  private clearFog(coordinate: Coordinate): Set<string> {
+  private clearFog(coordinate: Coordinate) {
     this.fogOfWar.update(oldSet => {
-      const newSet = new Set(oldSet);
-      newSet.add(`${coordinate.row},${coordinate.col}`);
+      const newSet = new Set<string>(oldSet);
+      newSet.delete(`${coordinate.row},${coordinate.col}`);
       return newSet;
     })
   }
 
   private setFog() {
-    this.cells.forEach(row =>
-    row.forEach(cell =>{
-      if(cell.cellState === 'water') cell.cellState = 'fog';
-    }))
-    this.fogOfWar.set(new Set);
+    const fogSet = new Set<string>();
+    this.cells.forEach((row, rowIdx) =>
+      row.forEach((cell, colIdx) => {
+        fogSet.add(`${rowIdx},${colIdx}`);
+      }))
+    this.fogOfWar.set(fogSet);
+  }
+
+  closeJollyRoger() {
+    this.loser.set(false);
   }
 }

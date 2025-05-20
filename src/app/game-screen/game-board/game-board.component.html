@@ -1,8 +1,8 @@
 <app-stats-screen [vesselPlacements]="vesselPlacements"
-                  [mirrored]="shouldMirrorStats"
-                  [deployedShips]="vesselClasses.length"/>
+                  [mirrored]="shouldMirrorStats"/>
 
 <div class="board-container">
+  <img src="/public/defeat.png" alt="Defeat!" class="defeat" *ngIf="loser()" (click)="closeJollyRoger()">
   <div class="grid">
     <ng-container *ngFor="let row of cells; let rowIndex = index">
       <div class="row">
@@ -15,3 +15,13 @@
     </ng-container>
   </div>
 </div>
+
+<button class="sitRep-button" type="button"
+        (mousedown)="sitRep.set(true)"
+        (mouseup)="sitRep.set(false)"
+        (touchstart)="sitRep.set(true)"
+        (mouseleave)="sitRep.set(false)"
+        (touchend)="sitRep.set(false)">
+</button>
+<label class="sitRep-label">Situation Report</label>
+

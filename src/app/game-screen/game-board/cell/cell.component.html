@@ -1,1 +1,3 @@
-<div class="cell" [ngClass]="cell.cellState" (click)="onCellClick()"></div>
+<div class="cell" [ngClass]="cell.cellState"
+     [class.fog]="board.gamePhase() === 'battle' && board.fogOfWar().has(coordinate.row + ',' + coordinate.col) && !board.sitRep()"
+     (click)="onCellClick()"></div>

@@ -8,4 +8,5 @@ export interface VesselPlacement {
   amountSections: number;
   placedSections: number;
   coordinatesOfSections: Coordinate[];
+  sunk: boolean
 }
